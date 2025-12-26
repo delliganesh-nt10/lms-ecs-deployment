@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16
+    container_name: ai-lms-postgres
+    environment:
+      POSTGRES_USER: ai_lms_user
+      POSTGRES_PASSWORD: ai_lms_password
+      POSTGRES_DB: ai_lms
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ai-lms-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ai_lms_user -d ai_lms" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - JWT_SECRET=LMmbbz3E+FSfuWHMkSntA3yUbaQOkqxi8JXeQIzbkJw=
+        - NEXT_PUBLIC_DATABASE_CONNECTION_STRING=postgresql://ai_lms_user:ai_lms_password@postgres:5432/ai_lms
+    container_name: ai-lms-app
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_DATABASE_CONNECTION_STRING=postgresql://ai_lms_user:ai_lms_password@postgres:5432/ai_lms
+      - JWT_SECRET=LMmbbz3E+FSfuWHMkSntA3yUbaQOkqxi8JXeQIzbkJw=
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ai-lms-network
+    restart: unless-stopped
+
+networks:
+  ai-lms-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+
+
