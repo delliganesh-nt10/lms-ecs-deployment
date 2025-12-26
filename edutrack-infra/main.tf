@@ -112,7 +112,7 @@ resource "aws_security_group" "ecs_sg" {
 resource "aws_lb" "lms_alb" {
   name               = "lms-alb"
   load_balancer_type = "application"
-  subnets            = [
+  subnets = [
     aws_subnet.public_a.id,
     aws_subnet.public_b.id
   ]
@@ -201,7 +201,7 @@ resource "aws_ecs_service" "lms_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = [
+    subnets = [
       aws_subnet.public_a.id,
       aws_subnet.public_b.id
     ]
